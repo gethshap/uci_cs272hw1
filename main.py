@@ -18,11 +18,13 @@ pipeline = Pipeline(
 )
 
 parameters = {
-    "vect__max_df": (0.25, 0.5, 0.75, 1.0),
-    'vect__max_features': (None, 100, 1000, 5000,10000),
-    "vect__ngram_range": ((1, 1), (1, 2)),  # unigrams or bigrams
+    "vect__max_df": [0.17],
+    'vect__max_features': [1500],
+    "vect__ngram_range": [(1, 1)],
     'tfidf__use_idf': (True, False),
-    'tfidf__norm': ('l1', 'l2')
+    #'tfidf__use_idf': [True],
+    #'tfidf__norm': ('l1', 'l2')
+    'tfidf__norm':[ 'l2'],
 }
 
 def tfidf(data):
@@ -51,13 +53,17 @@ if __name__ == "__main__":
     print(len(speech.dev_data))
     print("-- transforming data and labels")
 
-    '''
-    grid_search = GridSearchCV(pipeline, parameters, n_jobs=-1, verbose=3,error_score='raise')
+
+    grid_search = GridSearchCV(pipeline, parameters, verbose=3,error_score='raise')
     grid_search.fit(speech.train_data, speech.train_labels)
     print("Best score: %0.3f" % grid_search.best_score_)
     print("Best parameters set:")
     best_parameters = grid_search.best_estimator_.get_params()
-    
+    print(best_parameters)
+    b =  grid_search.cv_results_['mean_test_score']
+    #write_pred_kaggle_file(unlabeled,grid_search,"data/myspeech-pred.csv",speech)
+
+    print(str(b))
     '''
     print("Reading unlabeled data")
     unlabeled = read_unlabeled("data/speech.tar.gz", speech)
@@ -66,7 +72,19 @@ if __name__ == "__main__":
     transformed_unlabeled = transformer.transform(unlabeled.X)
     print('f')
     
-
+    '''
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from scipy.interpolate import make_interp_spline
+    x = [ 100, 200,300, 1000, 2000, 3000, 4000,5000]
+    y = b
+    model=make_interp_spline(x, y[1:])
+    xs = np.linspace(0, 5000, 5000)
+    ys = model(xs)
+    plt.plot(xs, ys)
+    plt.xlabel("#feature")
+    plt.ylabel("accuracy")
+    plt.show()
 
 
 
